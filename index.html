@@ -3,19 +3,18 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>IDFV Test</title>
+  <title>Redirect Test</title>
 </head>
 <body>
-  <h1>IDFV Test — logging & redirecting…</h1>
+  <h1>Redirect Test — logging & redirecting…</h1>
   <p>Open the Web Inspector console to see the logged timestamps.</p>
 
   <script>
     (function () {
       var params = new URLSearchParams(window.location.search);
       var ts = params.get('ts');
-      var idfv = params.get('idfv');
 
-      var KEY = 'idfv_test_timestamps';
+      var KEY = 'redirect_test_timestamps';
 
       // 1. Save this timestamp into session storage (append to a list).
       var entries = [];
@@ -25,13 +24,13 @@
         entries = [];
       }
       if (ts) {
-        entries.push({ ts: ts, idfv: idfv, receivedAt: new Date().toISOString() });
+        entries.push({ ts: ts, receivedAt: new Date().toISOString() });
         sessionStorage.setItem(KEY, JSON.stringify(entries));
       }
 
       // 2. Console log all timestamps seen so far in this session.
-      console.log('[IDFV Test] this visit — ts:', ts, ' idfv:', idfv);
-      console.log('[IDFV Test] all timestamps this session:', entries.map(function (e) { return e.ts; }));
+      console.log('[Redirect Test] this visit — ts:', ts);
+      console.log('[Redirect Test] all timestamps this session:', entries.map(function (e) { return e.ts; }));
       if (console.table) { console.table(entries); }
 
       // 3. Redirect to google.com (short delay so the logs stay visible).
