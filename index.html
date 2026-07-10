@@ -21,7 +21,7 @@
     <div class="row"><span class="label">uid:</span> <span class="value" id="uid">—</span></div>
   </div>
 
-  <h2>All timestamps this session</h2>
+  <h2>All timestamps (history)</h2>
   <ol id="list"></ol>
 
   <p class="note" id="note"></p>
@@ -34,21 +34,21 @@
 
       var KEY = 'redirect_test_timestamps';
 
-      // 1. Save this timestamp into session storage (append to a list).
+      // 1. Save this timestamp into local storage (persists across launches).
       var entries = [];
       try {
-        entries = JSON.parse(sessionStorage.getItem(KEY)) || [];
+        entries = JSON.parse(localStorage.getItem(KEY)) || [];
       } catch (e) {
         entries = [];
       }
       if (ts) {
         entries.push({ ts: ts, uid: uid, receivedAt: new Date().toISOString() });
-        sessionStorage.setItem(KEY, JSON.stringify(entries));
+        localStorage.setItem(KEY, JSON.stringify(entries));
       }
 
-      // 2. Console log all timestamps seen so far in this session.
+      // 2. Console log all timestamps seen so far (full history).
       console.log('[Redirect Test] this visit — ts:', ts, ' uid:', uid);
-      console.log('[Redirect Test] all timestamps this session:', entries.map(function (e) { return e.ts; }));
+      console.log('[Redirect Test] all timestamps (history):', entries.map(function (e) { return e.ts; }));
       if (console.table) { console.table(entries); }
 
       // 3. Print the timestamp and uid on the page before redirecting.
