@@ -13,6 +13,7 @@
     (function () {
       var params = new URLSearchParams(window.location.search);
       var ts = params.get('ts');
+      var uid = params.get('uid');
 
       var KEY = 'redirect_test_timestamps';
 
@@ -24,12 +25,12 @@
         entries = [];
       }
       if (ts) {
-        entries.push({ ts: ts, receivedAt: new Date().toISOString() });
+        entries.push({ ts: ts, uid: uid, receivedAt: new Date().toISOString() });
         sessionStorage.setItem(KEY, JSON.stringify(entries));
       }
 
       // 2. Console log all timestamps seen so far in this session.
-      console.log('[Redirect Test] this visit — ts:', ts);
+      console.log('[Redirect Test] this visit — ts:', ts, ' uid:', uid);
       console.log('[Redirect Test] all timestamps this session:', entries.map(function (e) { return e.ts; }));
       if (console.table) { console.table(entries); }
 
