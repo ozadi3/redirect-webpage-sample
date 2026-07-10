@@ -4,10 +4,27 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Redirect Test</title>
+  <style>
+    body { font-family: -apple-system, system-ui, sans-serif; margin: 24px; line-height: 1.5; }
+    .row { margin: 4px 0; }
+    .label { color: #666; }
+    .value { font-family: ui-monospace, monospace; word-break: break-all; }
+    ol { font-family: ui-monospace, monospace; font-size: 14px; }
+    .note { color: #888; margin-top: 16px; }
+  </style>
 </head>
 <body>
-  <h1>Redirect Test — logging & redirecting…</h1>
-  <p>Open the Web Inspector console to see the logged timestamps.</p>
+  <h1>Redirect Test</h1>
+
+  <div id="current">
+    <div class="row"><span class="label">timestamp (ts):</span> <span class="value" id="ts">—</span></div>
+    <div class="row"><span class="label">uid:</span> <span class="value" id="uid">—</span></div>
+  </div>
+
+  <h2>All timestamps this session</h2>
+  <ol id="list"></ol>
+
+  <p class="note" id="note"></p>
 
   <script>
     (function () {
@@ -34,10 +51,31 @@
       console.log('[Redirect Test] all timestamps this session:', entries.map(function (e) { return e.ts; }));
       if (console.table) { console.table(entries); }
 
-      // 3. Redirect to google.com (short delay so the logs stay visible).
+      // 3. Print the timestamp and uid on the page before redirecting.
+      document.getElementById('ts').textContent = ts || '(none)';
+      document.getElementById('uid').textContent = uid || '(none)';
+
+      var list = document.getElementById('list');
+      entries.forEach(function (e) {
+        var li = document.createElement('li');
+        li.textContent = 'ts=' + e.ts + '   uid=' + (e.uid || '(none)');
+        list.appendChild(li);
+      });
+
+      // 4. Redirect to google.com after a short delay so the values are readable.
+      var SECONDS = 4;
+      var note = document.getElementById('note');
+      var remaining = SECONDS;
+      note.textContent = 'Redirecting to google.com in ' + remaining + 's…';
+      var timer = setInterval(function () {
+        remaining -= 1;
+        note.textContent = 'Redirecting to google.com in ' + remaining + 's…';
+        if (remaining <= 0) { clearInterval(timer); }
+      }, 1000);
+
       setTimeout(function () {
         window.location.replace('https://www.google.com');
-      }, 1500);
+      }, SECONDS * 1000);
     })();
   </script>
 </body>
