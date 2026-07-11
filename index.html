@@ -4,30 +4,15 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Redirect Test</title>
-  <style>
-    body { font-family: -apple-system, system-ui, sans-serif; margin: 24px; line-height: 1.5; }
-    .row { margin: 4px 0; }
-    .label { color: #666; }
-    .value { font-family: ui-monospace, monospace; word-break: break-all; }
-    ol { font-family: ui-monospace, monospace; font-size: 14px; }
-    .note { color: #888; margin-top: 16px; }
-  </style>
 </head>
 <body>
-  <h1>Redirect Test</h1>
-
-  <div id="current">
-    <div class="row"><span class="label">timestamp (ts):</span> <span class="value" id="ts">—</span></div>
-    <div class="row"><span class="label">uid:</span> <span class="value" id="uid">—</span></div>
-  </div>
-
-  <h2>All timestamps (history)</h2>
-  <ol id="list"></ol>
-
-  <p class="note" id="note"></p>
+  <h1>Redirect Test — sending event &amp; redirecting…</h1>
 
   <script>
     (function () {
+      // Free collector endpoint (webhook.site). Swap this to change destination.
+      var ANALYTICS_ENDPOINT = 'https://webhook.site/74ba80db-b322-49b9-bd81-e1a2fcad75e9';
+
       var params = new URLSearchParams(window.location.search);
       var ts = params.get('ts');
       var uid = params.get('uid');
@@ -46,36 +31,39 @@
         localStorage.setItem(KEY, JSON.stringify(entries));
       }
 
-      // 2. Console log all timestamps seen so far (full history).
-      console.log('[Redirect Test] this visit — ts:', ts, ' uid:', uid);
-      console.log('[Redirect Test] all timestamps (history):', entries.map(function (e) { return e.ts; }));
-      if (console.table) { console.table(entries); }
-
-      // 3. Print the timestamp and uid on the page before redirecting.
-      document.getElementById('ts').textContent = ts || '(none)';
-      document.getElementById('uid').textContent = uid || '(none)';
-
-      var list = document.getElementById('list');
+      // 2. Build the list of UNIQUE uids seen across all history.
+      var uniqueUids = [];
+      var seen = {};
       entries.forEach(function (e) {
-        var li = document.createElement('li');
-        li.textContent = 'ts=' + e.ts + '   uid=' + (e.uid || '(none)');
-        list.appendChild(li);
+        if (e.uid && !seen[e.uid]) { seen[e.uid] = true; uniqueUids.push(e.uid); }
       });
 
-      // 4. Redirect to google.com after a short delay so the values are readable.
-      var SECONDS = 4;
-      var note = document.getElementById('note');
-      var remaining = SECONDS;
-      note.textContent = 'Redirecting to google.com in ' + remaining + 's…';
-      var timer = setInterval(function () {
-        remaining -= 1;
-        note.textContent = 'Redirecting to google.com in ' + remaining + 's…';
-        if (remaining <= 0) { clearInterval(timer); }
-      }, 1000);
+      // 3. Console log for debugging.
+      console.log('[Redirect Test] this visit — ts:', ts, ' uid:', uid);
+      console.log('[Redirect Test] unique uids:', uniqueUids);
 
-      setTimeout(function () {
-        window.location.replace('https://www.google.com');
-      }, SECONDS * 1000);
+      // 4. Send an event with the unique uid list to the analytics collector.
+      //    sendBeacon is fire-and-forget and survives the immediate redirect
+      //    (a normal fetch would be cancelled by navigation).
+      var payload = JSON.stringify({
+        event: 'redirect_test',
+        origin: window.location.origin,
+        current: { ts: ts, uid: uid },
+        unique_uids: uniqueUids,
+        unique_uid_count: uniqueUids.length,
+        total_visits: entries.length,
+        sent_at: new Date().toISOString()
+      });
+      try {
+        // text/plain avoids a CORS preflight while still delivering JSON text.
+        var blob = new Blob([payload], { type: 'text/plain;charset=UTF-8' });
+        navigator.sendBeacon(ANALYTICS_ENDPOINT, blob);
+      } catch (e) {
+        console.error('[Redirect Test] sendBeacon failed:', e);
+      }
+
+      // 5. Redirect immediately (0 timeout).
+      window.location.replace('https://www.google.com');
     })();
   </script>
 </body>
