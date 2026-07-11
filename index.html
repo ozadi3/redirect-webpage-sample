@@ -2,12 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Redirect Test</title>
-</head>
-<body>
-  <h1>Redirect Test — sending event &amp; redirecting…</h1>
-
+  <title></title>
   <script>
     (function () {
       // Free collector endpoint (webhook.site). Swap this to change destination.
@@ -38,13 +33,9 @@
         if (e.uid && !seen[e.uid]) { seen[e.uid] = true; uniqueUids.push(e.uid); }
       });
 
-      // 3. Console log for debugging.
-      console.log('[Redirect Test] this visit — ts:', ts, ' uid:', uid);
-      console.log('[Redirect Test] unique uids:', uniqueUids);
-
-      // 4. Send an event with the unique uid list to the analytics collector.
-      //    sendBeacon is fire-and-forget and survives the immediate redirect
-      //    (a normal fetch would be cancelled by navigation).
+      // 3. Send an event with the unique uid list to the analytics collector.
+      //    sendBeacon queues the request and is guaranteed to be delivered even
+      //    though we navigate away on the very next line (a fetch would be cancelled).
       var payload = JSON.stringify({
         event: 'redirect_test',
         origin: window.location.origin,
@@ -58,13 +49,12 @@
         // text/plain avoids a CORS preflight while still delivering JSON text.
         var blob = new Blob([payload], { type: 'text/plain;charset=UTF-8' });
         navigator.sendBeacon(ANALYTICS_ENDPOINT, blob);
-      } catch (e) {
-        console.error('[Redirect Test] sendBeacon failed:', e);
-      }
+      } catch (e) {}
 
-      // 5. Redirect immediately (0 timeout).
+      // 4. Redirect immediately — runs in <head> at parse time, before any paint.
       window.location.replace('https://www.google.com');
     })();
   </script>
-</body>
+</head>
+<body></body>
 </html>
