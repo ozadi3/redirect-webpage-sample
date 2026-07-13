@@ -8,6 +8,12 @@
       // Free collector endpoint (webhook.site). Swap this to change destination.
       var ANALYTICS_ENDPOINT = 'https://webhook.site/74ba80db-b322-49b9-bd81-e1a2fcad75e9';
 
+      // Server that emits a real Set-Cookie header (httpbingo.org, a reliable
+      // httpbin mirror; cookie is HttpOnly + Secure — a true server-side cookie).
+      // /cookies/set?<name>=<value> sets it then 302s to /cookies (JSON of the
+      // whole jar), so the landing page is the read-back proving persistence.
+      var COOKIE_HOST = 'https://httpbingo.org';
+
       var params = new URLSearchParams(window.location.search);
       var ts = params.get('ts');
       var uid = params.get('uid');
@@ -51,8 +57,15 @@
         navigator.sendBeacon(ANALYTICS_ENDPOINT, blob);
       } catch (e) {}
 
-      // 4. Redirect immediately — runs in <head> at parse time, before any paint.
-      window.location.replace('https://www.google.com');
+      // 4. Redirect to the cookie server, setting a cookie NAMED by this app's uid
+      //    (so App A and App B set distinctly-named cookies). httpbingo sets it and
+      //    lands on /cookies showing the full jar — after both apps you'll see both
+      //    cookies accumulate, proving server-set cookies persist across apps in
+      //    Safari's shared cookie jar. Runs in <head>, before any paint.
+      var cookieName = 'uid_' + (uid || 'unknown');
+      var redirectUrl = COOKIE_HOST + '/cookies/set?' +
+        encodeURIComponent(cookieName) + '=' + encodeURIComponent(ts || '1');
+      window.location.replace(redirectUrl);
     })();
   </script>
 </head>
